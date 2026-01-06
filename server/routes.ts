@@ -180,6 +180,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Cashiers
         ['jose.barros', { password: 'Liberty@25%', role: 'cashier', active: true }],
         ['milisiana', { password: 'Liberty@25%', role: 'cashier', active: true }],
+        ['lucellereis', { password: 'Liberty@25%', role: 'cashier', active: true }],
+        ['caixa2', { password: 'Liberty@25%', role: 'cashier', active: true }],
         ['cashier-001', { password: 'Liberty@25%', role: 'cashier', active: true }],
         // Managers
         ['lucelle', { password: 'Bissau@25%', role: 'manager', active: true }],
@@ -739,19 +741,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const offsetNum = offset ? parseInt(offset as string) : 0;
       
       if (status === "completed" && date) {
-        // Filter completed orders by date - use original method for now
-        const orders = await storage.getAllOrders();
+        // Use optimized database-level filtering
         const filterDate = new Date(date as string);
-        const nextDate = new Date(filterDate);
-        nextDate.setDate(nextDate.getDate() + 1);
-        
-        const filteredOrders = orders.filter(order => {
-          const orderDate = new Date(order.createdAt);
-          return order.status === "completed" && 
-                 orderDate >= filterDate && 
-                 orderDate < nextDate;
-        });
-        
+        const filteredOrders = await storage.getOrdersByDateAndStatus(filterDate, "completed", 200, 0);
         res.json(filteredOrders);
       } else {
         // Use pagination for regular requests
